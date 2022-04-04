@@ -1,0 +1,59 @@
+pragma solidity >=0.4.00 <0.8.0;
+
+contract ERC20{
+
+               //variables
+               address owner;
+               uint256 nDeTokkens;
+               mapping (address => uint256) public userBalance;
+               
+               //eventos
+               event IngresaDinero(address _comprador, uint256 _dinero);
+               
+    //modifier
+    modifier onlyOwner { 
+        require(isOwner(), "Only owner can do that!");
+        _;
+    }
+
+
+               //constructor
+               constructor(uint256 _nDeTokkens) public             {
+                              owner = msg.sender;
+                              nDeTokkens = _nDeTokkens;
+               }
+               
+               //funciones
+    function isOwner() view private returns(bool) {
+        return msg.sender == owner;
+    }
+    
+
+               function compraTokkens () public payable {
+                              address payable comprador = msg.sender;
+                              uint256 tokkensComprados = msg.value / conversion;
+                              uint256 cambio = msg.value % conversion;
+                              require(nDeTokkens >= tokkensComprados, "No hay suficientes tokken disponibles");
+                              
+                              emit IngresaDinero(msg.sender, msg.value);
+                              
+                              nDeTokkens = nDeTokkens - tokkensComprados;
+                              userBalance[comprador] = userBalance[comprador] + tokkensComprados;
+                              
+                              comprador.transfer(cambio);
+               }
+                              
+               function transfer (address _destinatario, uint256 _nTokAEnviar) public {
+                              address origen = msg.sender;
+                              require(_nTokAEnviar <= userBalance[origen], "No hay saldo suficiente para realizar la transferencia");
+                                             
+                              userBalance[origen] = userBalance[origen] - _nTokAEnviar;
+                              userBalance[_destinatario] = userBalance[_destinatario] + _nTokAEnviar;               
+               }
+
+    function burn(address _burnDest, uint256 _tokkenToBurn) onlyOwner public{
+        require(_tokkenToBurn <= userBalance[_burnDest], "No hay saldo suficiente para cambiar la cuenta");
+        userBalance[_burnDest] = userBalance[_burnDest] - _tokkenToBurn;
+        
+    }
+}
